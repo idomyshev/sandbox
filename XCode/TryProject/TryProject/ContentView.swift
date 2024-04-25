@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
-    private let tableView: UITableView = {
-        let table = UITableView()
-        table.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        return table
-    }
+//    private let tableView: UITableView = {
+//        let table = UITableView()
+//        table.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+//        return table
+//    }
     
     var body: some View {
         NavigationView {
