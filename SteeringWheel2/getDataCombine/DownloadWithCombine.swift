@@ -1,10 +1,3 @@
-//
-//  SwiftUIView.swift
-//  SteeringWheel
-//
-//  Created by Iliiah on 27.08.24.
-//
-
 import SwiftUI
 
 struct RotationView: View {
