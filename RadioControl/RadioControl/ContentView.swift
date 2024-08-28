@@ -6,15 +6,58 @@
 //
 
 import SwiftUI
+import Combine
+
+struct Person: Identifiable, Codable {
+    let id: Int
+    let first_name: String
+}
+
+struct ApiResponse: Codable {
+    let records: [Person]
+}
+
+class CallApi: ObservableObject {
+    @Published var people: [Person] = []
+    
+    var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        //
+    }
+    
+    func callApi(operation: String, speed: Int) {
+        guard let url = URL(string: "http://192.168.4.1/\(operation)/\(String(speed))") else { return }
+        
+        URLSession.shared.dataTaskPublisher(for: url)
+            .subscribe(on: DispatchQueue.global(qos: .background))
+            .receive(on: DispatchQueue.main)
+            .tryMap { (data, response) -> Data in
+                guard
+                    let response = response as? HTTPURLResponse,
+                    response.statusCode >= 200 && response.statusCode < 300 else {
+                    throw URLError(.badServerResponse)
+                }
+                return data
+                
+            }.decode(type: ApiResponse.self, decoder: JSONDecoder())
+            .sink { (completion) in
+                print("COMPLETION: \(completion)")
+            } receiveValue: { [weak self] (apiResponse) in
+                self?.people = apiResponse.records
+            }.store(in: &cancellables)
+    }
+}
 
 struct ContentView: View {
+    @StateObject private var vm = CallApi()
+    
     @State private var dragOffset: CGSize = .zero
     @State private var position: CGSize = .zero
     
     @State private var aaCurrent: CGSize = .zero
     @State private var aaSaved: CGSize = .zero
     
-    @State var isChanging: Int = 0;
     
     @State var currentY: Double = .zero;
     @State var savedY: Double = .zero;
@@ -31,15 +74,13 @@ struct ContentView: View {
                         self.dragOffset = value.translation
                     })
                         .onChanged({
-//                            (value) in aaCurrent.height = value.translation.height
-                            
                             (value) in currentY = value.translation.height
                             
+
                             
-                            isChanging = 1;
+                            
                         })
                         .onEnded({ (value) in
-                            isChanging = 0;
                             
                             self.position.width += value.translation.width
                             
@@ -47,11 +88,9 @@ struct ContentView: View {
                             
                             self.dragOffset = .zero
                             
-                            aaSaved.height = aaCurrent.height + value.translation.height
-                            
-                            aaCurrent.height = .zero
-                            
                             savedY = savedY + currentY;
+                            
+                            vm.callApi(operation: "on", speed: Int(savedY))
                             
                             currentY = .zero
                         })
@@ -67,9 +106,6 @@ struct ContentView: View {
                 .padding()
             
             Text("Result Y: \(Int(savedY + currentY))")
-                .padding()
-            
-            Text("isChanging1: \(isChanging)")
                 .padding()
         }
     }
