@@ -66,7 +66,7 @@ struct ContentView: View {
             Text("Saved Y: \(savedY)")
                 .padding()
             
-            Text("Result Y: \(savedY + currentY)")
+            Text("Result Y: \(Int(savedY + currentY))")
                 .padding()
             
             Text("isChanging1: \(isChanging)")
